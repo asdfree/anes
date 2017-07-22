@@ -1,17 +1,5 @@
-my_email_address <- Sys.getenv( "my_email_address" )
-
-machine_specific_replacements <- 
-	list( 
-		
-		# replace the folder path on macnix
-		c( 'path.expand( \"~\" ) , \"ANES\"' , paste0( '"' , getwd() , '"' ) ) ,
-		
-		# change other things in the script to be run
-		c( "hello" , "howdy" ) ,
-		
-		c( '"email@address.com"' , 'my_email_address' )
-		
-	)
 if ( .Platform$OS.type == 'windows' ) memory.limit( 256000 )
-
-source( lodown::syntaxtractor( "anes" , replacements = machine_specific_replacements , setup_test = "setup" ) , echo = TRUE )
+my_email_address <- Sys.getenv( "my_email_address" )
+library(lodown)
+lodown( "anes" , output_dir = file.path( getwd() ) , 
+	your_email = my_email_address )
