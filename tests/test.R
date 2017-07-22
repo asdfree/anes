@@ -12,5 +12,6 @@ machine_specific_replacements <-
 		c( '"email@address.com"' , 'my_email_address' )
 		
 	)
+if ( .Platform$OS.type == 'windows' ) memory.limit( 256000 )
 
 source( lodown::syntaxtractor( "anes" , replacements = machine_specific_replacements , setup_test = "test" ) , echo = TRUE )
