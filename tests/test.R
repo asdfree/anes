@@ -41,7 +41,7 @@ anes_design <-
 		think_fed_govt_spends_most_on =
 			factor( v161514 , levels = 1:4 , labels =
 				c( 'foreign aid' , 'medicare' , 'national defense' , 'social security' )
-			)
+			) ,
 		
 		children_brought_illegally =
 			factor( v161195x , levels = 1:6 , labels =
