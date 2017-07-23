@@ -7,57 +7,76 @@ anes_cat <-
 		output_dir = file.path( getwd() ) , 
 		your_email = my_email_address )
 
-# 2015 only
-anes_cat <- subset( anes_cat , year == 2015 )
+# 2016 only
+anes_cat <- subset( anes_cat , directory == "2016 Time Series Study" )
 # download the microdata to your local computer
 stopifnot( nrow( anes_cat ) > 0 )
 
 
 library(survey)
 
-anes_df <- readRDS( file.path( getwd() , "2015 main.rds" ) )
+anes_df <- readRDS( file.path( getwd() , "2016 Time Series Study/anes_timeseries_2016_.rds" ) )
 
 anes_design <-
 	svydesign( 
-		~psu.full , 
-		strata = ~strata.full , 
+		~v160202 , 
+		strata = ~v160201 , 
 		data = anes_df , 
-		weights = ~weight.full , 
+		weights = ~v160102 , 
 		nest = TRUE 
 	)
 
 anes_design <- 
 	update( 
 		anes_design , 
-		q2 = q2 ,
-		never_rarely_wore_bike_helmet = as.numeric( qn8 == 1 ) ,
-		ever_smoked_marijuana = as.numeric( qn47 == 1 ) ,
-		ever_tried_to_quit_cigarettes = as.numeric( q36 > 2 ) ,
-		smoked_cigarettes_past_year = as.numeric( q36 > 1 )
+		
+		one = 1 ,
+		
+		pope_francis_thermometer = ifelse( v162094 %in% 0:100 , v162094 , NA ) ,
+
+		christian_fundamentalist_thermometer = ifelse( v162095 %in% 0:100 , v162095 , NA ) ,
+		
+		primary_voter = ifelse( v161021 %in% 1:2 , as.numeric( v161021 == 1 ) , NA ) ,
+
+		think_fed_govt_spends_most_on =
+			factor( v161514 , levels = 1:4 , labels =
+				c( 'foreign aid' , 'medicare' , 'national defense' , 'social security' )
+			)
+		
+		children_brought_illegally =
+			factor( v161195x , levels = 1:6 , labels =
+				c( 'should sent back - favor a great deal' ,
+					'should sent back - favor a moderate amount' ,
+					'should sent back - favor a little' ,
+					'should allow to stay - favor a little' ,
+					'should allow to stay - favor a moderate amount' ,
+					'should allow to stay - favor a great deal' )
+			)
+
 	)
 sum( weights( anes_design , "sampling" ) != 0 )
 
-svyby( ~ one , ~ ever_smoked_marijuana , anes_design , unwtd.count )
+svyby( ~ one , ~ children_brought_illegally , anes_design , unwtd.count )
 svytotal( ~ one , anes_design )
 
-svyby( ~ one , ~ ever_smoked_marijuana , anes_design , svytotal )
-svymean( ~ bmipct , anes_design , na.rm = TRUE )
+svyby( ~ one , ~ children_brought_illegally , anes_design , svytotal )
+svymean( ~ pope_francis_thermometer , anes_design , na.rm = TRUE )
 
-svyby( ~ bmipct , ~ ever_smoked_marijuana , anes_design , svymean , na.rm = TRUE )
-svymean( ~ q2 , anes_design , na.rm = TRUE )
+svyby( ~ pope_francis_thermometer , ~ children_brought_illegally , anes_design , svymean , na.rm = TRUE )
+svymean( ~ think_fed_govt_spends_most_on , anes_design , na.rm = TRUE )
 
-svyby( ~ q2 , ~ ever_smoked_marijuana , anes_design , svymean , na.rm = TRUE )
-svytotal( ~ bmipct , anes_design , na.rm = TRUE )
+svyby( ~ think_fed_govt_spends_most_on , ~ children_brought_illegally , anes_design , svymean , na.rm = TRUE )
+svytotal( ~ pope_francis_thermometer , anes_design , na.rm = TRUE )
 
-svyby( ~ bmipct , ~ ever_smoked_marijuana , anes_design , svytotal , na.rm = TRUE )
-svytotal( ~ q2 , anes_design , na.rm = TRUE )
+svyby( ~ pope_francis_thermometer , ~ children_brought_illegally , anes_design , svytotal , na.rm = TRUE )
+svytotal( ~ think_fed_govt_spends_most_on , anes_design , na.rm = TRUE )
 
-svyby( ~ q2 , ~ ever_smoked_marijuana , anes_design , svytotal , na.rm = TRUE )
-svyquantile( ~ bmipct , anes_design , 0.5 , na.rm = TRUE )
+svyby( ~ think_fed_govt_spends_most_on , ~ children_brought_illegally , anes_design , svytotal , na.rm = TRUE )
+svyquantile( ~ pope_francis_thermometer , anes_design , 0.5 , na.rm = TRUE )
 
 svyby( 
-	~ bmipct , 
-	~ ever_smoked_marijuana , 
+	~ pope_francis_thermometer , 
+	~ children_brought_illegally , 
 	anes_design , 
 	svyquantile , 
 	0.5 ,
@@ -66,14 +85,14 @@ svyby(
 	na.rm = TRUE
 )
 svyratio( 
-	numerator = ~ ever_tried_to_quit_cigarettes , 
-	denominator = ~ smoked_cigarettes_past_year , 
+	numerator = ~ christian_fundamentalist_thermometer , 
+	denominator = ~ pope_francis_thermometer , 
 	anes_design ,
 	na.rm = TRUE
 )
-sub_anes_design <- subset( anes_design , qn41 == 1 )
-svymean( ~ bmipct , sub_anes_design , na.rm = TRUE )
-this_result <- svymean( ~ bmipct , anes_design , na.rm = TRUE )
+sub_anes_design <- subset( anes_design , v161158x == 4 )
+svymean( ~ pope_francis_thermometer , sub_anes_design , na.rm = TRUE )
+this_result <- svymean( ~ pope_francis_thermometer , anes_design , na.rm = TRUE )
 
 coef( this_result )
 SE( this_result )
@@ -82,8 +101,8 @@ cv( this_result )
 
 grouped_result <-
 	svyby( 
-		~ bmipct , 
-		~ ever_smoked_marijuana , 
+		~ pope_francis_thermometer , 
+		~ children_brought_illegally , 
 		anes_design , 
 		svymean ,
 		na.rm = TRUE 
@@ -94,22 +113,22 @@ SE( grouped_result )
 confint( grouped_result )
 cv( grouped_result )
 degf( anes_design )
-svyvar( ~ bmipct , anes_design , na.rm = TRUE )
+svyvar( ~ pope_francis_thermometer , anes_design , na.rm = TRUE )
 # SRS without replacement
-svymean( ~ bmipct , anes_design , na.rm = TRUE , deff = TRUE )
+svymean( ~ pope_francis_thermometer , anes_design , na.rm = TRUE , deff = TRUE )
 
 # SRS with replacement
-svymean( ~ bmipct , anes_design , na.rm = TRUE , deff = "replace" )
-svyciprop( ~ never_rarely_wore_bike_helmet , anes_design ,
+svymean( ~ pope_francis_thermometer , anes_design , na.rm = TRUE , deff = "replace" )
+svyciprop( ~ primary_voter , anes_design ,
 	method = "likelihood" , na.rm = TRUE )
-svyttest( bmipct ~ never_rarely_wore_bike_helmet , anes_design )
+svyttest( pope_francis_thermometer ~ primary_voter , anes_design )
 svychisq( 
-	~ never_rarely_wore_bike_helmet + q2 , 
+	~ primary_voter + think_fed_govt_spends_most_on , 
 	anes_design 
 )
 glm_result <- 
 	svyglm( 
-		bmipct ~ never_rarely_wore_bike_helmet + q2 , 
+		pope_francis_thermometer ~ primary_voter + think_fed_govt_spends_most_on , 
 		anes_design 
 	)
 
@@ -117,9 +136,9 @@ summary( glm_result )
 library(srvyr)
 anes_srvyr_design <- as_survey( anes_design )
 anes_srvyr_design %>%
-	summarize( mean = survey_mean( bmipct , na.rm = TRUE ) )
+	summarize( mean = survey_mean( pope_francis_thermometer , na.rm = TRUE ) )
 
 anes_srvyr_design %>%
-	group_by( ever_smoked_marijuana ) %>%
-	summarize( mean = survey_mean( bmipct , na.rm = TRUE ) )
+	group_by( children_brought_illegally ) %>%
+	summarize( mean = survey_mean( pope_francis_thermometer , na.rm = TRUE ) )
 
