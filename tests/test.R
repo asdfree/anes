@@ -15,7 +15,11 @@ stopifnot( nrow( anes_cat ) > 0 )
 
 library(survey)
 
-anes_df <- readRDS( file.path( getwd() , "2016 Time Series Study/anes_timeseries_2016_.rds" ) )
+anes_df <- 
+	readRDS( 
+		file.path( getwd() , 
+			"2016 Time Series Study/anes_timeseries_2016_.rds" )
+	)
 
 anes_design <-
 	svydesign( 
@@ -32,18 +36,18 @@ anes_design <-
 		
 		one = 1 ,
 		
-		pope_francis_thermometer = ifelse( v162094 %in% 0:100 , v162094 , NA ) ,
+		pope_francis_score = ifelse( v162094 %in% 0:100 , v162094 , NA ) ,
 
-		christian_fundamentalist_thermometer = ifelse( v162095 %in% 0:100 , v162095 , NA ) ,
+		christian_fundamentalist_score = ifelse( v162095 %in% 0:100 , v162095 , NA ) ,
 		
 		primary_voter = ifelse( v161021 %in% 1:2 , as.numeric( v161021 == 1 ) , NA ) ,
 
-		think_fed_govt_spends_most_on =
+		think_gov_spend =
 			factor( v161514 , levels = 1:4 , labels =
 				c( 'foreign aid' , 'medicare' , 'national defense' , 'social security' )
 			) ,
 		
-		children_brought_illegally =
+		undoc_kids =
 			factor( v161195x , levels = 1:6 , labels =
 				c( 'should sent back - favor a great deal' ,
 					'should sent back - favor a moderate amount' ,
@@ -56,27 +60,27 @@ anes_design <-
 	)
 sum( weights( anes_design , "sampling" ) != 0 )
 
-svyby( ~ one , ~ children_brought_illegally , anes_design , unwtd.count )
+svyby( ~ one , ~ undoc_kids , anes_design , unwtd.count )
 svytotal( ~ one , anes_design )
 
-svyby( ~ one , ~ children_brought_illegally , anes_design , svytotal )
-svymean( ~ pope_francis_thermometer , anes_design , na.rm = TRUE )
+svyby( ~ one , ~ undoc_kids , anes_design , svytotal )
+svymean( ~ pope_francis_score , anes_design , na.rm = TRUE )
 
-svyby( ~ pope_francis_thermometer , ~ children_brought_illegally , anes_design , svymean , na.rm = TRUE )
-svymean( ~ think_fed_govt_spends_most_on , anes_design , na.rm = TRUE )
+svyby( ~ pope_francis_score , ~ undoc_kids , anes_design , svymean , na.rm = TRUE )
+svymean( ~ think_gov_spend , anes_design , na.rm = TRUE )
 
-svyby( ~ think_fed_govt_spends_most_on , ~ children_brought_illegally , anes_design , svymean , na.rm = TRUE )
-svytotal( ~ pope_francis_thermometer , anes_design , na.rm = TRUE )
+svyby( ~ think_gov_spend , ~ undoc_kids , anes_design , svymean , na.rm = TRUE )
+svytotal( ~ pope_francis_score , anes_design , na.rm = TRUE )
 
-svyby( ~ pope_francis_thermometer , ~ children_brought_illegally , anes_design , svytotal , na.rm = TRUE )
-svytotal( ~ think_fed_govt_spends_most_on , anes_design , na.rm = TRUE )
+svyby( ~ pope_francis_score , ~ undoc_kids , anes_design , svytotal , na.rm = TRUE )
+svytotal( ~ think_gov_spend , anes_design , na.rm = TRUE )
 
-svyby( ~ think_fed_govt_spends_most_on , ~ children_brought_illegally , anes_design , svytotal , na.rm = TRUE )
-svyquantile( ~ pope_francis_thermometer , anes_design , 0.5 , na.rm = TRUE )
+svyby( ~ think_gov_spend , ~ undoc_kids , anes_design , svytotal , na.rm = TRUE )
+svyquantile( ~ pope_francis_score , anes_design , 0.5 , na.rm = TRUE )
 
 svyby( 
-	~ pope_francis_thermometer , 
-	~ children_brought_illegally , 
+	~ pope_francis_score , 
+	~ undoc_kids , 
 	anes_design , 
 	svyquantile , 
 	0.5 ,
@@ -85,14 +89,14 @@ svyby(
 	na.rm = TRUE
 )
 svyratio( 
-	numerator = ~ christian_fundamentalist_thermometer , 
-	denominator = ~ pope_francis_thermometer , 
+	numerator = ~ christian_fundamentalist_score , 
+	denominator = ~ pope_francis_score , 
 	anes_design ,
 	na.rm = TRUE
 )
 sub_anes_design <- subset( anes_design , v161158x == 4 )
-svymean( ~ pope_francis_thermometer , sub_anes_design , na.rm = TRUE )
-this_result <- svymean( ~ pope_francis_thermometer , anes_design , na.rm = TRUE )
+svymean( ~ pope_francis_score , sub_anes_design , na.rm = TRUE )
+this_result <- svymean( ~ pope_francis_score , anes_design , na.rm = TRUE )
 
 coef( this_result )
 SE( this_result )
@@ -101,8 +105,8 @@ cv( this_result )
 
 grouped_result <-
 	svyby( 
-		~ pope_francis_thermometer , 
-		~ children_brought_illegally , 
+		~ pope_francis_score , 
+		~ undoc_kids , 
 		anes_design , 
 		svymean ,
 		na.rm = TRUE 
@@ -113,22 +117,22 @@ SE( grouped_result )
 confint( grouped_result )
 cv( grouped_result )
 degf( anes_design )
-svyvar( ~ pope_francis_thermometer , anes_design , na.rm = TRUE )
+svyvar( ~ pope_francis_score , anes_design , na.rm = TRUE )
 # SRS without replacement
-svymean( ~ pope_francis_thermometer , anes_design , na.rm = TRUE , deff = TRUE )
+svymean( ~ pope_francis_score , anes_design , na.rm = TRUE , deff = TRUE )
 
 # SRS with replacement
-svymean( ~ pope_francis_thermometer , anes_design , na.rm = TRUE , deff = "replace" )
+svymean( ~ pope_francis_score , anes_design , na.rm = TRUE , deff = "replace" )
 svyciprop( ~ primary_voter , anes_design ,
 	method = "likelihood" , na.rm = TRUE )
-svyttest( pope_francis_thermometer ~ primary_voter , anes_design )
+svyttest( pope_francis_score ~ primary_voter , anes_design )
 svychisq( 
-	~ primary_voter + think_fed_govt_spends_most_on , 
+	~ primary_voter + think_gov_spend , 
 	anes_design 
 )
 glm_result <- 
 	svyglm( 
-		pope_francis_thermometer ~ primary_voter + think_fed_govt_spends_most_on , 
+		pope_francis_score ~ primary_voter + think_gov_spend , 
 		anes_design 
 	)
 
@@ -136,9 +140,9 @@ summary( glm_result )
 library(srvyr)
 anes_srvyr_design <- as_survey( anes_design )
 anes_srvyr_design %>%
-	summarize( mean = survey_mean( pope_francis_thermometer , na.rm = TRUE ) )
+	summarize( mean = survey_mean( pope_francis_score , na.rm = TRUE ) )
 
 anes_srvyr_design %>%
-	group_by( children_brought_illegally ) %>%
-	summarize( mean = survey_mean( pope_francis_thermometer , na.rm = TRUE ) )
+	group_by( undoc_kids ) %>%
+	summarize( mean = survey_mean( pope_francis_score , na.rm = TRUE ) )
 
