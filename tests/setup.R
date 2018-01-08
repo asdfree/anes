@@ -13,8 +13,8 @@ anes_cat <-
 # 2016 only
 anes_cat <- subset( anes_cat , directory == "2016 Time Series Study" )
 # download the microdata to your local computer
-lodown( "anes" , anes_cat , 
-	your_email = my_email_address )
+
+
 
 library(survey)
 
